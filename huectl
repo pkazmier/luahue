@@ -1,0 +1,88 @@
+#!/usr/local/bin/luajit
+
+--- huectl: Command line utility to control Hue lights
+--
+-- The tool uses the Lua Hue API by the same author.
+--
+-- Copyright Pete Kazmier 2013
+
+local hue = require 'hue'
+local json = require 'json'
+local lapp = require 'pl.lapp'
+local utils = require 'pl.utils'
+local pretty = require 'pl.pretty'
+local tablex = require 'pl.tablex'
+
+local args = lapp [[
+Utility to control Philips Hue lights
+  -d,--discover                         Discover local bridges
+  -r,--register   (optional string)     Register username at bridge
+  -u,--username   (default huectladmin) Authenticate using this username
+  -l,--list                             Lights to manipulate
+
+  -P,--power      (optional on|off)     Turn lights on or off
+  -A,--alert      (optional short|long) Cycle the light brightness
+  -E,--effect     (optional none|colorloop) Set an effect
+  -T,--transition (optional number)     Set transition time (x100ms)
+
+  -B,--brightness (optional 0..255)     Set brightness 
+  -H,--hue        (optional 0..65535)   Set hue (0 red, 25500 green, 46920 blue)
+  -S,--saturation (optional 0..255)     Set saturation (0 colored, 255 white)
+  -C,--temperature (optional 153..500)  Set color temp (153 cooler, 500 warmer)
+
+  <bridge>        (optional string)     IP address of a Philips bridge
+  <lights...>     (optional string)     List of lights (id or name)
+]]
+
+if args.discover then
+   for _,ip in ipairs(hue.discover()) do
+      print(ip)
+   end
+   os.exit(0)
+end
+
+if args.register then
+   print('Not implemented yet '..args.register)
+   os.exit(0)
+end
+
+if not args.bridge then
+   lapp.error('missing bridge parameter')
+end
+
+local b = hue.Bridge:new(args.bridge, args.username)
+
+if args.list then
+   local f = function(x,y) return tonumber(x) < tonumber(y) end
+   for k,v in tablex.sort(b:lights(),f) do
+      print(k,v)
+   end
+   os.exit(0)
+end
+
+local rules = {
+   power       = { key='on', fn=function(x) return x=='on' and true or false end },
+   alert       = { key='alert', fn=function(x) return x=='short' and 'select' or 'lselect' end },
+   effect      = { key='effect', fn=function(x) return x end },
+   transition  = { key='transitiontime', fn=math.floor },
+   brightness  = { key='bri', fn=math.floor },
+   hue         = { key='hue', fn=math.floor },
+   saturation  = { key='sat', fn=math.floor },
+   temperature = { key='ct', fn=math.floor },
+}
+
+local state = {}
+for arg,rule in pairs(rules) do
+   if args[arg] then
+      state[rule.key] = rule.fn(args[arg])
+   end
+end
+
+if next(state) ~= nil then
+   b:set_state(args.lights, state)
+else
+   pretty.dump(b:get_state(args.lights))
+end
+
+os.exit(0)
+
