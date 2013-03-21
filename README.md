@@ -3,6 +3,14 @@ luahue
 
 Lua API and command line utility to control your Philips Hue lightbulbs.
 
+### TODO
+
+Still a work in progress, just wanted to post the code up.
+
+ - Get status of lights
+ - Registration of usernames with the bridge
+ - Documentation
+
 ### Command Line Utility
 
 The following examples assume your bridge IP is `192.168.1.72` and your authenticated 
