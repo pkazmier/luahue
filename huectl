@@ -19,16 +19,17 @@ Utility to control Philips Hue lights
   -r,--register   (optional string)     Register username at bridge
   -u,--username   (default huectladmin) Authenticate using this username
   -l,--list                             Lights to manipulate
+  -g,--get        (optional string)     Get an attribute (state.on, state.bri)
 
-  -P,--power      (optional on|off)     Turn lights on or off
-  -A,--alert      (optional short|long) Cycle the light brightness
-  -E,--effect     (optional none|colorloop) Set an effect
-  -T,--transition (optional number)     Set transition time (x100ms)
+  -O,--on  (optional true|false)        Turn lights on or off
+  -A,--alert  (optional select|lselect) Cycle the light brightness
+  -E,--effect (optional none|colorloop) Set an effect 
+  -T,--transitiontime (optional number) Set transition time (x100ms)
 
-  -B,--brightness (optional 0..255)     Set brightness 
-  -H,--hue        (optional 0..65535)   Set hue (0 red, 25500 green, 46920 blue)
-  -S,--saturation (optional 0..255)     Set saturation (0 colored, 255 white)
-  -C,--temperature (optional 153..500)  Set color temp (153 cooler, 500 warmer)
+  -B,--bri (optional 0..255)     Set brightness (0 low, 255 high)
+  -H,--hue (optional 0..65535)   Set hue (0 red, 25500 green, 46920 blue)
+  -S,--sat (optional 0..255)     Set saturation (0 colored, 255 white)
+  -C,--ct  (optional 153..500)   Set color temp (153 cooler, 500 warmer)
 
   <bridge>        (optional string)     IP address of a Philips bridge
   <lights...>     (optional string)     List of lights (id or name)
@@ -60,29 +61,30 @@ if args.list then
    os.exit(0)
 end
 
-local rules = {
-   power       = { key='on', fn=function(x) return x=='on' and true or false end },
-   alert       = { key='alert', fn=function(x) return x=='short' and 'select' or 'lselect' end },
-   effect      = { key='effect', fn=function(x) return x end },
-   transition  = { key='transitiontime', fn=math.floor },
-   brightness  = { key='bri', fn=math.floor },
-   hue         = { key='hue', fn=math.floor },
-   saturation  = { key='sat', fn=math.floor },
-   temperature = { key='ct', fn=math.floor },
+local arg_formatters = {
+   on = function(x) return x=='true' and true or false end,
+   ct = math.floor,
+   bri = math.floor,
+   hue = math.floor,
+   sat = math.floor,
+   alert = function(x) return x end,
+   effect = function(x) return x end,
+   transitiontime = math.floor,
 }
 
 local state = {}
-for arg,rule in pairs(rules) do
+for arg, formatter in pairs(arg_formatters) do
    if args[arg] then
-      state[rule.key] = rule.fn(args[arg])
+      state[arg] = arg_formatters[arg](args[arg])
    end
 end
 
 if next(state) ~= nil then
-   b:set_state(args.lights, state)
-else
-   pretty.dump(b:get_state(args.lights))
+   pretty.dump(b:set_state(args.lights, state))
+   os.exit(0)
 end
+
+pretty.dump(b:get_state(args.lights, args.get))
 
 os.exit(0)
 

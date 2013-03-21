@@ -15,7 +15,7 @@ local stringx = require 'pl.stringx'
 --- Discovers any local Hue bridges on the network
 -- @return a list of IP addresses
 function M.discover()
-   local r = M.jsonRequest('http://www.meethue.com/api/nupnp')
+   local r = M.json_request('http://www.meethue.com/api/nupnp')
    if r then 
       return tablex.imap(function(b) return b.internalipaddress end, r)
    end
@@ -41,6 +41,11 @@ function M.Bridge:new(host, username, o)
    self.__index = self
    o:lights()
    return o
+end
+
+function M.Bridge:register(username, devicetype)
+   assert(username,'username is nil')
+   assert(devicetype,'devicetype is nil')
 end
 
 --- Returns the list of lights registered with the bridge.
@@ -79,7 +84,7 @@ end
 function M.Bridge:set_state(lights, state)
    resources,invalid = self:resource_uris(lights, '/state', '/action')
    local results = {}
-   for _,uri in ipairs(resources) do 
+   for light,uri in pairs(resources) do 
       results[uri] = self:request(uri,'PUT',state)
    end
    return results
@@ -90,11 +95,11 @@ end
 -- @param lights a list of lights specified by id or name
 -- @param state a table containing the desired state
 -- @return a table showing status of specified resources
-function M.Bridge:get_state(lights)
+function M.Bridge:get_state(lights, path)
    resources,invalid = self:resource_uris(lights)
    local results = {}
-   for _,uri in ipairs(resources) do 
-      results[uri] = self:request(uri)
+   for light,uri in pairs(resources) do 
+      results[light] = M.table_path(self:request(uri), path)
    end
    return results
 end
@@ -111,7 +116,7 @@ function M.Bridge:resource_uris(lights, light_suffix, group_suffix)
    for _,l in ipairs(lights) do
       local id = self:lookup_id(l)
       if id then 
-         resources[#resources+1]='/lights/'..id..light_suffix
+         resources[l]='/lights/'..id..light_suffix
       else
          invalid[#invalid+1]=l
       end
@@ -124,12 +129,20 @@ function M.Bridge:request(resource, method, body)
 
    local url = 'http://'..self.host..'/api/'..self.username..resource
 
-   return M.jsonRequest(url, method, body)
+   return M.json_request(url, method, body)
 end
 
 -- Utility functions
 
-function M.jsonRequest(url, method, body)
+function M.table_path(t, path)
+   if not path then return t end
+   for _,p in ipairs(stringx.split(path,'.')) do
+      t = t[p]
+   end
+   return t
+end
+
+function M.json_request(url, method, body)
    assert(url)
    method = method or 'GET'
 
