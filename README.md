@@ -79,4 +79,51 @@ More to come later ...
 
 ### API Documentation
 
-More to come later ...
+The `hue` Lua library is a thin wrapper around the official Philips
+REST API. Following the example from the command line utility, we
+can discover bridges on our local network with:
+```
+require 'hue'
+
+for _,ip in ipairs(hue.discover()) do
+    print(ip)
+end
+```
+Once we have the IP address of our bridge, we now need to obtain a
+registered username. This code has not been written yet (in the next
+day or two), but it will work as follows:
+```
+hue.register('huectladmin', 'Hue Lua CLI Tool')
+```
+With both the bridge IP address and a registered username, we can 
+now instantiate an instance of our Bridge class:
+```
+local b = hue.Bridge:new(bridge_ip, username)
+```
+Now we are ready to rock and roll. If we want to find all the lights
+that have been associated with the bridge:
+```
+for light_id,light_name in b:lights() do
+    print(light_id, light_name)
+end
+```
+To get or set the state of our lights, we will use the `get_state`
+and`set_state` methods respectively. The first argument to both 
+methods is a list of lights that we wish to interact with. This 
+list of lights can be specified using either the light identifier
+or the light name. If lights is an empty table, then all lights
+will be targeted. Let's turn all of our lights on and change them
+to a deep, rich, red color:
+```
+b:set_state({}, {on=true, hue=0, sat=0, bri=255})
+```
+If we want to obtain the current state of a light, we can do the
+following:
+```
+require 'pl.pretty'  -- used to pretty print the output
+local results = b:get_state({'TV','Door'}, 'state.bri')
+pretty.dump(results)
+
+<standard output>
+{ TV = 255, Door = 255 }
+```
