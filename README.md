@@ -29,7 +29,6 @@ option:
 ```
 $ huectl -d
 192.168.1.72
-$
 ```
 On this local network, one bridge was discovered. The IP address of the bridge
 is `192.168.1.72`. We will need to specify this on the command line in our 
