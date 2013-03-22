@@ -7,7 +7,6 @@ local M = {}
 local json = require 'json'
 local http = require 'socket.http'
 local ltn12 = require 'ltn12'
-local seq = require 'pl.seq'
 local tablex = require 'pl.tablex'
 local stringx = require 'pl.stringx'
 
@@ -85,7 +84,7 @@ function M.Bridge:set_state(lights, state)
    resources,invalid = self:resource_uris(lights, '/state', '/action')
    local results = {}
    for light,uri in pairs(resources) do 
-      results[uri] = self:request(uri,'PUT',state)
+      results[light] = self:request(uri,'PUT',state)
    end
    return results
 end
@@ -93,7 +92,7 @@ end
 --- Gets the state of the specified lights. State is specified as a table
 -- of items specified from http://developers.meethue.com/1_lightsapi.html.
 -- @param lights a list of lights specified by id or name
--- @param state a table containing the desired state
+-- @param path dotted string path of attribute to get
 -- @return a table showing status of specified resources
 function M.Bridge:get_state(lights, path)
    resources,invalid = self:resource_uris(lights)
@@ -137,7 +136,11 @@ end
 function M.table_path(t, path)
    if not path then return t end
    for _,p in ipairs(stringx.split(path,'.')) do
-      t = t[p]
+      if t[p] then 
+         t = t[p]
+      else
+         return t
+      end
    end
    return t
 end

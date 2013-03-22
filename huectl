@@ -73,18 +73,25 @@ local arg_formatters = {
 }
 
 local state = {}
-for arg, formatter in pairs(arg_formatters) do
+for arg,formatter in pairs(arg_formatters) do
    if args[arg] then
       state[arg] = arg_formatters[arg](args[arg])
    end
 end
 
 if next(state) ~= nil then
-   pretty.dump(b:set_state(args.lights, state))
-   os.exit(0)
+   local retval = 0
+   local status = b:set_state(args.lights, state)
+   for light,results in pairs(status) do
+      for _,result in ipairs(results) do
+         if result.error then
+            retval = 1
+            print(light, result.error.description)
+         end
+      end
+   end
+   os.exit(retval)
 end
 
 pretty.dump(b:get_state(args.lights, args.get))
-
 os.exit(0)
-
