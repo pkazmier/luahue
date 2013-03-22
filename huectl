@@ -15,10 +15,10 @@ local tablex = require 'pl.tablex'
 
 local args = lapp [[
 Utility to control Philips Hue lights
+  -l,--list                             Lights to manipulate
   -d,--discover                         Discover local bridges
   -r,--register   (optional string)     Register username at bridge
   -u,--username   (default huectladmin) Authenticate using this username
-  -l,--list                             Lights to manipulate
   -g,--get        (optional string)     Get an attribute (state.on, state.bri)
 
   -O,--on  (optional true|false)        Turn lights on or off
@@ -52,6 +52,10 @@ if not args.bridge then
 end
 
 local b = hue.Bridge:new(args.bridge, args.username)
+if not b then
+   print 'Could not connect to the bridge'
+   os.exit(1)
+end
 
 if args.list then
    local f = function(x,y) return tonumber(x) < tonumber(y) end

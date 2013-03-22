@@ -33,13 +33,18 @@ M.Bridge = {}
 function M.Bridge:new(host, username, o)
    assert(host,'hostname is nil')
    assert(username,'username is nil') 
+
    o = o or {}
    o.host = host
    o.username = username
    setmetatable(o, self)
    self.__index = self
-   o:lights()
-   return o
+
+   if not o:lights() then
+      return nil
+   else
+      return o
+   end
 end
 
 function M.Bridge:register(username, devicetype)
@@ -57,7 +62,7 @@ function M.Bridge:lights(no_cache)
 
    local r = self:request('/lights')
    if not r then 
-      return nil 
+      return nil
    end
 
    self.ids,self.names = {}, {}
@@ -163,7 +168,7 @@ function M.json_request(url, method, body)
       sink = ltn12.sink.table(results),
    }
 
-   if code < 200 or code > 299 then
+   if string.sub(code,1,2) ~= "20" then
       return nil, code
    end
 
