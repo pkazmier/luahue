@@ -20,6 +20,20 @@ function M.discover()
    end
 end
 
+--- Register a username with the devicetype to the bridge.
+-- NOTE: you must press the link button on your bridge before this
+-- call is made, else it will fail.
+-- @param host the IP address of the bridge
+-- @param username the username to register
+-- @param devicetype a textual description of your application
+-- @return a table showing success or error
+function M.register(host, username, devicetype)
+   assert(username,'username is nil')
+   assert(devicetype,'devicetype is nil')
+   local body = { devicetype=devicetype, username=username }
+   return M.json_request('http://'..host..'/api', 'POST', body)
+end
+
 -- Bridge object definition
 
 M.Bridge = {}
@@ -45,11 +59,6 @@ function M.Bridge:new(host, username, o)
    else
       return o
    end
-end
-
-function M.Bridge:register(username, devicetype)
-   assert(username,'username is nil')
-   assert(devicetype,'devicetype is nil')
 end
 
 --- Returns the list of lights registered with the bridge.

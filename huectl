@@ -17,7 +17,7 @@ local args = lapp [[
 Utility to control Philips Hue lights
   -l,--list                             Lights to manipulate
   -d,--discover                         Discover local bridges
-  -r,--register   (optional string)     Register username at bridge
+  -r,--register                         Register username at bridge
   -u,--username   (default huectladmin) Authenticate using this username
   -g,--get        (optional string)     Get an attribute (state.on, state.bri)
 
@@ -42,13 +42,23 @@ if args.discover then
    os.exit(0)
 end
 
-if args.register then
-   print('Not implemented yet '..args.register)
-   os.exit(0)
-end
-
 if not args.bridge then
    lapp.error('missing bridge parameter')
+end
+
+if args.register then
+   local retval = 0
+   local status = hue.register(args.bridge, args.username, 'Huectl CLI Tool')
+   for _,result in ipairs(status) do
+      if result.error then
+         retval = 1
+         print(result.error.description)
+      end
+   end
+   if retval == 0 then
+      print 'Successfully registered username'
+   end
+   os.exit(retval)
 end
 
 local b = hue.Bridge:new(args.bridge, args.username)
