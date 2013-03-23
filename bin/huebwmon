@@ -1,0 +1,74 @@
+#!/usr/local/bin/luajit
+
+-- Adjust color of your Hue lights based on current network utilization.
+--
+-- Copyright Pete Kazmier 2013
+
+local hue = require 'hue'
+local ffi = require 'ffi'
+local lapp = require 'pl.lapp'
+
+ffi.cdef "unsigned int sleep(unsigned int seconds);"
+
+local args = lapp [[
+Change color of Hue lights based on bandwidth usage
+  -v,--verbose    Print computed kbps to stdout 
+  -i,--interface  (default eth0) Interface to monitor
+  -u,--username   (default huectladmin) Authenticate using this username
+  -L,--low        (default 10) Low water mark in kbps (green)
+  -H,--high       (default 500) High water mark in kbps (red)
+  <bridge>        (string) IP address of a Philips bridge
+  <lights...>     (optional string) List of lights (id or name)
+]]
+
+local b = hue.Bridge:new(args.bridge, args.username)
+if not b then
+  print 'Could not connect to the bridge'
+  os.exit(1)
+end
+
+function kbps_to_hue(kbps)
+  if kbps < args.low then
+    return 25500  -- green as specified by Hue
+  elseif kbps > args.high then
+    return 0      -- red as specified by Hue
+  else
+    return math.floor(((args.high - kbps) * (25500 / (args.high - args.low))) + 0.5)
+  end
+end
+
+function get_octets(interface)
+  local rx,err = io.open('/sys/class/net/'..interface..'/statistics/rx_bytes','r')
+  if not rx then return error(err) end
+  local octets = rx:read('*n')
+  rx:close()
+  return octets
+end
+
+function kbps_iterator(interface)
+  local old = get_octets(args.interface)
+  return function()
+    local cur = get_octets(args.interface)
+    local kbps = (cur-old)*8/1000
+    old = cur
+    return kbps
+  end
+end
+
+local get_kbps = kbps_iterator(args.interface)
+local state = { hue=25500, sat=255, on=true }
+
+while true do
+  ffi.C.sleep(1)
+  local kbps = get_kbps()
+  if args.verbose then print(kbps) end
+  state.hue = kbps_to_hue(kbps)
+  local status = b:set_state(args.lights, state)
+  for light,results in pairs(status) do
+    for _,result in ipairs(results) do
+      if result.error then
+        print(light, result.error.description)
+      end
+    end
+  end
+end
