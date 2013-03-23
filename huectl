@@ -23,7 +23,7 @@ Utility to control Philips Hue lights
 
   -O,--on  (optional true|false)        Turn lights on or off
   -A,--alert  (optional select|lselect) Cycle the light brightness
-  -E,--effect (optional none|colorloop) Set an effect 
+  -E,--effect (optional none|colorloop) Set an effect
   -T,--transitiontime (optional number) Set transition time (x100ms)
 
   -B,--bri (optional 0..255)     Set brightness (0 low, 255 high)
@@ -36,75 +36,75 @@ Utility to control Philips Hue lights
 ]]
 
 if args.discover then
-   for _,ip in ipairs(hue.discover()) do
-      print(ip)
-   end
-   os.exit(0)
+  for _,ip in ipairs(hue.discover()) do
+    print(ip)
+  end
+  os.exit(0)
 end
 
 if not args.bridge then
-   lapp.error('missing bridge parameter')
+  lapp.error('missing bridge parameter')
 end
 
 if args.register then
-   local retval = 0
-   local status = hue.register(args.bridge, args.username, 'Huectl CLI Tool')
-   for _,result in ipairs(status) do
-      if result.error then
-         retval = 1
-         print(result.error.description)
-      end
-   end
-   if retval == 0 then
-      print 'Successfully registered username'
-   end
-   os.exit(retval)
+  local retval = 0
+  local status = hue.register(args.bridge, args.username, 'Huectl CLI Tool')
+  for _,result in ipairs(status) do
+    if result.error then
+      retval = 1
+      print(result.error.description)
+    end
+  end
+  if retval == 0 then
+    print 'Successfully registered username'
+  end
+  os.exit(retval)
 end
 
 local b = hue.Bridge:new(args.bridge, args.username)
 if not b then
-   print 'Could not connect to the bridge'
-   os.exit(1)
+  print 'Could not connect to the bridge'
+  os.exit(1)
 end
 
 if args.list then
-   local f = function(x,y) return tonumber(x) < tonumber(y) end
-   for k,v in tablex.sort(b:lights(),f) do
-      print(k,v)
-   end
-   os.exit(0)
+  local f = function(x,y) return tonumber(x) < tonumber(y) end
+  for k,v in tablex.sort(b:lights(),f) do
+    print(k,v)
+  end
+  os.exit(0)
 end
 
 local arg_formatters = {
-   on = function(x) return x=='true' and true or false end,
-   ct = math.floor,
-   bri = math.floor,
-   hue = math.floor,
-   sat = math.floor,
-   alert = function(x) return x end,
-   effect = function(x) return x end,
-   transitiontime = math.floor,
+  on = function(x) return x=='true' and true or false end,
+  ct = math.floor,
+  bri = math.floor,
+  hue = math.floor,
+  sat = math.floor,
+  alert = function(x) return x end,
+  effect = function(x) return x end,
+  transitiontime = math.floor,
 }
 
 local state = {}
 for arg,formatter in pairs(arg_formatters) do
-   if args[arg] then
-      state[arg] = arg_formatters[arg](args[arg])
-   end
+  if args[arg] then
+    state[arg] = arg_formatters[arg](args[arg])
+  end
 end
 
 if next(state) ~= nil then
-   local retval = 0
-   local status = b:set_state(args.lights, state)
-   for light,results in pairs(status) do
-      for _,result in ipairs(results) do
-         if result.error then
-            retval = 1
-            print(light, result.error.description)
-         end
+  local retval = 0
+  local status = b:set_state(args.lights, state)
+  for light,results in pairs(status) do
+    for _,result in ipairs(results) do
+      if result.error then
+        retval = 1
+        print(light, result.error.description)
       end
-   end
-   os.exit(retval)
+    end
+  end
+  os.exit(retval)
 end
 
 pretty.dump(b:get_state(args.lights, args.get))
