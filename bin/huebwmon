@@ -14,6 +14,7 @@ local args = lapp [[
 Change color of Hue lights based on bandwidth usage
   -v,--verbose    Print computed kbps to stdout 
   -i,--interface  (default eth0) Interface to monitor
+  -n,--interval   (default 3) Seconds between measurements
   -u,--username   (default huectladmin) Authenticate using this username
   -L,--low        (default 10) Low water mark in kbps (green)
   -H,--high       (default 500) High water mark in kbps (red)
@@ -59,7 +60,7 @@ local get_kbps = kbps_iterator(args.interface)
 local state = { hue=25500, sat=255, on=true }
 
 while true do
-  socket.sleep(1)
+  socket.sleep(args.interval)
   local kbps = get_kbps()
   if args.verbose then print(kbps) end
   state.hue = kbps_to_hue(kbps)
