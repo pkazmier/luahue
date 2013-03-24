@@ -7,8 +7,9 @@
 -- Copyright Pete Kazmier 2013
 
 local hue = require 'hue'
-local lapp = require 'pl.lapp'   -- arg parsing
-local socket = require 'socket'  -- socket.gettime, socket.sleep
+local lapp = require 'pl.lapp'      -- arg parsing
+local pretty = require 'pl.pretty'  -- pretty.dump
+local socket = require 'socket'     -- socket.gettime, socket.sleep
 
 local args = lapp [[
 Change color of Hue lights based on bandwidth usage
@@ -16,7 +17,7 @@ Change color of Hue lights based on bandwidth usage
   -i,--interface  (default eth0) Interface to monitor
   -n,--interval   (default 3) Seconds between measurements
   -u,--username   (default huectladmin) Authenticate using this username
-  -L,--low        (default 10) Low water mark in kbps (green)
+  -L,--low        (default 25) Low water mark in kbps (green)
   -H,--high       (default 500) High water mark in kbps (red)
   <bridge>        (string) IP address of a Philips bridge
   <lights...>     (optional string) List of lights (id or name)
@@ -38,12 +39,18 @@ function kbps_to_hue(kbps)
   end
 end
 
+function read_number(filename)
+  local f,err = io.open(filename,'r')
+  if not f then return error(err) end
+  local n = f:read('*n')
+  f:close()
+  return n
+end
+
 function get_octets(interface)
-  local rx,err = io.open('/sys/class/net/'..interface..'/statistics/rx_bytes','r')
-  if not rx then return error(err) end
-  local octets = rx:read('*n')
-  rx:close()
-  return octets
+  return 
+    read_number('/sys/class/net/'..interface..'/statistics/rx_bytes') +
+    read_number('/sys/class/net/'..interface..'/statistics/tx_bytes')
 end
 
 function kbps_iterator(interface)
@@ -61,15 +68,10 @@ local state = { hue=25500, sat=255, on=true }
 
 while true do
   socket.sleep(args.interval)
+
   local kbps = get_kbps()
   if args.verbose then print(kbps) end
+
   state.hue = kbps_to_hue(kbps)
-  local status = b:set_state(args.lights, state)
-  for light,results in pairs(status) do
-    for _,result in ipairs(results) do
-      if result.error then
-        print(light, result.error.description)
-      end
-    end
-  end
+  b:set_state(args.lights, state)
 end
