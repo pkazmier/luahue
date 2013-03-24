@@ -1,15 +1,14 @@
 #!/usr/local/bin/luajit
 
--- Adjust color of your Hue lights based on current network utilization.
+-- Adjust color of your Hue lights based on current network
+-- utilization.  Low bandwidth results in green lights, while high
+-- bandwidth results in red lights.
 --
 -- Copyright Pete Kazmier 2013
 
 local hue = require 'hue'
-local ffi = require 'ffi'
-local lapp = require 'pl.lapp'
-local socket = require 'socket'
-
-ffi.cdef 'unsigned int sleep(unsigned int seconds);'
+local lapp = require 'pl.lapp'   -- arg parsing
+local socket = require 'socket'  -- socket.gettime, socket.sleep
 
 local args = lapp [[
 Change color of Hue lights based on bandwidth usage
@@ -60,7 +59,7 @@ local get_kbps = kbps_iterator(args.interface)
 local state = { hue=25500, sat=255, on=true }
 
 while true do
-  ffi.C.sleep(1)
+  socket.sleep(1)
   local kbps = get_kbps()
   if args.verbose then print(kbps) end
   state.hue = kbps_to_hue(kbps)
