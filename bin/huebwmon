@@ -7,8 +7,9 @@
 local hue = require 'hue'
 local ffi = require 'ffi'
 local lapp = require 'pl.lapp'
+local socket = require 'socket'
 
-ffi.cdef "unsigned int sleep(unsigned int seconds);"
+ffi.cdef 'unsigned int sleep(unsigned int seconds);'
 
 local args = lapp [[
 Change color of Hue lights based on bandwidth usage
@@ -46,11 +47,11 @@ function get_octets(interface)
 end
 
 function kbps_iterator(interface)
-  local old = get_octets(args.interface)
+  local old, old_t = get_octets(args.interface), socket.gettime()
   return function()
-    local cur = get_octets(args.interface)
-    local kbps = (cur-old)*8/1000
-    old = cur
+    local cur, cur_t = get_octets(args.interface), socket.gettime()
+    local kbps = ((cur-old)*8/1000) / (cur_t-old_t)
+    old, old_t = cur, cur_t
     return kbps
   end
 end
