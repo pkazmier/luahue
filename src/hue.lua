@@ -93,23 +93,37 @@ end
 -- of items specified from http://developers.meethue.com/1_lightsapi.html.
 -- @param lights a list of lights specified by id or name
 -- @param state a table containing the desired state
--- @return a table showing success or error for each attribute set
+-- @return nil if successful, else a table of errors keyed by light where
+-- the values are a list of errors
 function M.Bridge:set_state(lights, state)
   resources,invalid = self:resource_uris(lights, '/state', '/action')
-  local results = {}
-  for light,uri in pairs(resources) do
-    results[light] = self:request(uri,'PUT',state)
+
+  local errors = {}  -- keyed by light, value is a list of errors
+  for _,light in ipairs(invalid) do
+    errors[light] = { 'light not found' }
   end
-  return results
+
+  for light,uri in pairs(resources) do
+    local status = self:request(uri,'PUT',state)
+    for _,retval in ipairs(status) do
+      if retval.error then
+        if not errors[light] then errors[light] = {} end
+        table.insert(errors[light], retval.error.description)
+      end
+    end
+  end
+
+  return next(errors) and errors or nil
 end
 
 --- Gets the state of the specified lights. State is specified as a table
 -- of items specified from http://developers.meethue.com/1_lightsapi.html.
 -- @param lights a list of lights specified by id or name
 -- @param path dotted string path of attribute to get
--- @return a table showing status of specified resources
+-- @return a table showing status of specified resources, if a light
+-- does not exist, there will be no result in the table.
 function M.Bridge:get_state(lights, path)
-  resources,invalid = self:resource_uris(lights)
+  resources = self:resource_uris(lights)
   local results = {}
   for light,uri in pairs(resources) do
     results[light] = M.table_path(self:request(uri), path)

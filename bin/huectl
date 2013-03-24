@@ -95,14 +95,10 @@ end
 
 if next(state) ~= nil then
   local retval = 0
-  local status = b:set_state(args.lights, state)
-  for light,results in pairs(status) do
-    for _,result in ipairs(results) do
-      if result.error then
-        retval = 1
-        print(light, result.error.description)
-      end
-    end
+  local errors = b:set_state(args.lights, state)
+  if errors then
+    retval = 1
+    pretty.dump(errors)
   end
   os.exit(retval)
 end
