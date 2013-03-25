@@ -164,10 +164,10 @@ end
 function M.table_path(t, path)
   if not path then return t end
   for _,p in ipairs(stringx.split(path,'.')) do
-    if t[p] then
-      t = t[p]
-    else
+    if t[p] == nil then
       return t
+    else
+      t = t[p]
     end
   end
   return t
