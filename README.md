@@ -26,23 +26,24 @@ connects to your home router via Ethernet making the lights accessible
 via IP from your home network. All communication to/from the lights is
 done via the bridge.
 
+### Installation
+
+Installation is easy with luarocks. You can install using as follows:
+
+```
+$ sudo luarocks install luahue
+```
+
+This will install both the `hue` library as well as both command line
+tools: `huectl` and `huebwmon`.
+
 ### Command Line Utility: huectl
 
 Let's explore what the Hue bulbs have to offer using `huectl`, a
 command line utility written in Lua that utilizes the `hue.lua`
-library. With that said, let's get started! You'll need to make sure
-you have a few Lua libraries installed: penlight, lua2json, and
-luasocket. This is trivial with `luarocks`:
-
-```
-$ sudo luarocks install penlight
-$ sudo luarocks install lua2json
-$ sudo luarocks install luasocket
-```
-
-First, we need to discover the IP addresses of any Hue bridges
-connected to our local network. We can do so using the `-d` or
-`--discover` option:
+library. Let's get started! First, we need to discover the IP
+addresses of any Hue bridges connected to our local network. We can do
+so using the `-d` or `--discover` option:
 
 ```
 $ huectl -d
@@ -274,17 +275,7 @@ Utility to control Philips Hue lights
 
 This utility monitors the bandwidth of an interface adjusting the
 color of one or more lights based on the utilization allowing you to
-visually gauge usage of your network. Like the prior tool, you'll need
-to make sure you have a few Lua libraries installed: penlight,
-lua2json, and luasocket:
-
-```
-$ sudo luarocks install penlight
-$ sudo luarocks install lua2json
-$ sudo luarocks install luasocket
-```
-
-With the necessary dependencies out of the way, let's take a look at
+visually gauge usage of your network. Let's take a look at
 the help:
 
 ```
