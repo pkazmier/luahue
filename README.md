@@ -12,6 +12,10 @@ attempts (via iptables and swatch). The second utility, `huebwmon`,
 changes the colors of my lights based on the amount of bandwidth
 to/from my ISP.
 
+ - <a href="#command-line-utility-huectl">huectl</a> - Hue Control
+ - <a href="#command-line-utility-huebwmon">huebwmon</a> - Hue Bandwidth Monitor
+ - <a href="#api-documentation">hue.lua</a> - Lua Hue API
+
 For those that do not know abouth the Philips Hue light system, it
 consists of LED bulbs that are networked together allowing them to be
 controlled remotely via an IP network. One can control settings such
