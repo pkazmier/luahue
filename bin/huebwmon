@@ -1,6 +1,6 @@
-#!/usr/local/bin/luajit
+#!/usr/bin/env lua
 
--- Adjust color of your Hue lights based on current network
+--- Adjust color of your Hue lights based on current network
 -- utilization.  Low bandwidth results in green lights, while high
 -- bandwidth results in red lights.
 --
