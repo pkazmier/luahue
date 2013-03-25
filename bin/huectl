@@ -13,6 +13,21 @@ local utils = require 'pl.utils'
 local pretty = require 'pl.pretty'
 local tablex = require 'pl.tablex'
 
+if not tablex.sort then
+  -- I submitted this code to penlight, but until it's accepted, the
+  -- penlight dependency won't have it, so we need to define it here.
+  function tablex.sort(t,f)
+    local keys = {}
+    for k in pairs(t) do keys[#keys + 1] = k end
+    table.sort(keys,f)
+    local i = 0
+    return function()
+      i = i + 1
+      return keys[i], t[keys[i]]
+    end
+  end
+end
+
 local args = lapp [[
 Utility to control Philips Hue lights
   -l,--list                             Lights to manipulate
