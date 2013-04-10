@@ -311,7 +311,7 @@ The `hue` Lua library is a thin wrapper around the official Philips
 REST API. Following the example from the command line utility, we can
 discover bridges on our local network with:
 
-```
+```lua
 require 'hue'
 
 for _,ip in ipairs(hue.discover()) do
@@ -324,21 +324,21 @@ registered username. Before this call is executed, you MUST press the
 link button on the bridge. You'll then have 30 seconds to initiate
 this request.
 
-```
+```lua
 hue.register('huectladmin', 'Hue Lua CLI Tool')
 ```
 
 With both the bridge IP address and a registered username, we can 
 now instantiate an instance of our Bridge class:
 
-```
+```lua
 local b = hue.Bridge:new(bridge_ip, username)
 ```
 
 Now we are ready to rock and roll. If we want to find all the lights
 that have been associated with the bridge:
 
-```
+```lua
 for light_id,light_name in b:lights() do
     print(light_id, light_name)
 end
@@ -352,7 +352,7 @@ light name. If lights is an empty table, then all lights will be
 targeted. Let's turn all of our lights on and change them to a deep,
 rich, red color:
 
-```
+```lua
 local pretty = require 'pl.pretty'  -- used to pretty print the output
 local errors = b:set_state({}, {on=true, hue=0, sat=255, bri=255})
 if errors then
@@ -380,7 +380,7 @@ more error messages.
 If we want to obtain the current state of a light, we can do the
 following:
 
-```
+```lua
 local pretty = require 'pl.pretty'  -- used to pretty print the output
 local results = b:get_state({'TV','Door'}, 'state.bri')
 pretty.dump(results)
