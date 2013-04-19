@@ -110,8 +110,8 @@ end
 
 if next(state) ~= nil then
   local retval = 0
-  local errors = b:set_state(args.lights, state)
-  if errors then
+  local ok, errors = b:set_state(args.lights, state)
+  if not ok then
     retval = 1
     pretty.dump(errors)
   end

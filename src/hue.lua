@@ -93,8 +93,8 @@ end
 -- of items specified from http://developers.meethue.com/1_lightsapi.html.
 -- @param lights a list of lights specified by id or name
 -- @param state a table containing the desired state
--- @return nil if successful, else a table of errors keyed by light where
--- the values are a list of errors
+-- @return true if successful, else a nil and a table of errors keyed
+-- by light where the values are a list of errors
 function M.Bridge:set_state(lights, state)
   resources,invalid = self:resource_uris(lights, '/state', '/action')
 
@@ -113,7 +113,11 @@ function M.Bridge:set_state(lights, state)
     end
   end
 
-  return next(errors) and errors or nil
+  if next(errors) then
+    return nil, errors
+  else
+    return true
+  end
 end
 
 --- Gets the state of the specified lights. State is specified as a table
